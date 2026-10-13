@@ -20,6 +20,7 @@ async def get_posts(
     result = await db.execute(
         select(models.Post)
         .options(selectinload(models.Post.author))
+        .order_by(models.Post.date_posted.desc())
         )
     posts = result.scalars().all()
     return posts
