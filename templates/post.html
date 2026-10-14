@@ -6,7 +6,7 @@
             alt="{{ post.author.username }}'s profile picture" width="64" height="64" loading="lazy">
         <div class="flex-grow-1">
             <div class="article-metadata mb-2">
-                <a class="me-2" href="{{ url_for('user_posts', user_id=post.author.id) }}">{{ post.author.username
+                <a class="me-2" href="{{ url_for(" user_posts", user_id=post.author.id) }}">{{ post.author.username
                     }}</a>
                 <small class="text-body-secondary">{{ post.date_posted.strftime("%B %d, %Y") }}</small>
             </div>
@@ -83,16 +83,13 @@
     } from "/static/js/utils.js";
 
     // Get post ID from Jinja2 template
-    const postId = {{ post.id | tojson }};
+    const postId = {{ post.id }};
 
     // Edit Post Form Handler
     const editForm = document.getElementById("editPostForm");
-    console.log("Formulario encontrado:", editForm);
-
     editForm.addEventListener("submit", async (event) => {
         // Stop default form submission - we'll handle it with JavaScript
         event.preventDefault();
-        console.log("Evento submit interceptado");
 
         // Gather form values into a plain object
         const formData = new FormData(editForm);
