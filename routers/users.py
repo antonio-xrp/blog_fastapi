@@ -9,10 +9,9 @@ from sqlalchemy.orm import selectinload
 
 import models
 from auth import(
+    CurrentUser,
     create_access_token,
-    hash_password,
-    oauth2_scheme,
-    verify_access_token,
+    hash_password,  
     verify_password
 )
 from config import settings
@@ -82,7 +81,7 @@ async def create_user(
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Annotated[AsyncSession, Depends(get_db)]
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     # Look up user by email (case-insensitive)
     # Note: OAuth2PasswordRequestForm uses "username" field, but we treat it as email
@@ -110,42 +109,11 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+
 # ¿Qué usuario corresponde al token que está presentando el cliente? - fronted
 @router.get("/me", response_model=UserPrivate)
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-):
-    """Get the currently authenticated user."""
-    user_id = verify_access_token(token)
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Validate user_id is a valid integer (defense against malformed JWT)
-    try:
-        user_id_int = int(user_id)
-    except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    result = await db.execute(
-        select(models.User).where(models.User.id == user_id_int),
-    )
-    user = result.scalars().first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
+async def get_current_user(current_user: CurrentUser):
+    return current_user
 
 
 # -- CONSULTAR USER POR ID
@@ -210,8 +178,16 @@ async def get_user_posts(
 async def update_user(
     user_id:int,
     user_update: UserUpdate,
+    current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
+
+    if user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this user",
+        )
+
     result = await db.execute(
         select(models.User)
         .where(models.User.id == user_id)
@@ -225,11 +201,13 @@ async def update_user(
 
     #El cliente ha enviado un nombre nuevo.
     #Ese nombre es diferente del que el usuario ya tiene.
-    if user_update.username is not None and user_update.username != user.username:
+    if user_update.username is not None and user_update.username.lower() != user.username.lower():
         result = await db.execute(
             select(models.User)
-            .where(models.User.username == user_update.username)
+            .where(
+                func.lower(models.User.username) == user_update.username.lower())
         )
+
         existing_user = result.scalars().first()
         if existing_user:
             raise HTTPException(
@@ -237,10 +215,11 @@ async def update_user(
                 detail="Username already exists"
             )
     
-    if user_update.email is not None and user_update.email != user.email:
+    if user_update.email is not None and user_update.email.lower() != user.email.lower():
         result = await db.execute(
             select(models.User)
-            .where(models.User.email == user_update.email)
+            .where(
+                func.lower(models.User.email) == user_update.email.lower())
         )
         existing_email = result.scalars().first()
         if existing_email:
@@ -267,14 +246,23 @@ async def update_user(
 )
 async def delete_user(
     user_id: int,
+    current_user: CurrentUser,
     db:Annotated[AsyncSession,
     Depends(get_db)]
 ):
+
+    if user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this user",
+            )
+
     result = await db.execute(
         select(models.User)
         .where(models.User.id == user_id)
     )
     user = result.scalars().first()
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

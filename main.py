@@ -63,7 +63,11 @@ async def home(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
 
 # -- Página de una publicacion
 @app.get("/posts/{post_id}", include_in_schema=False)
-async def post_page(request:Request, post_id: int, db:Annotated[AsyncSession, Depends(get_db)]):
+async def post_page(
+    request:Request,
+    post_id: int,
+    db:Annotated[AsyncSession, Depends(get_db)]
+):
     #Filtramos por id del post
     result = await db.execute(
         select(models.Post)
@@ -123,9 +127,17 @@ async def login_page(request: Request):
 @app.get("/register", include_in_schema=False)
 async def register_page(request: Request):
     return templates.TemplateResponse(
-        request,
-        "register.html",
-        {"title": "Register"},
+        request=request,
+        name="register.html",
+        context={"title": "Register"},
+    )
+
+@app.get("/account", include_in_schema=False)
+async def account_page(request:Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="account.html",
+        context={"title": "Account"},
     )
 
 
