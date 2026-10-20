@@ -42,17 +42,17 @@ async def send_password_reset_email(to_email: str, username: str, token: str) ->
 
     plain_text = f"""Hi {username},
 
-    You requested to reset your password. Click the link below to set a new password:
+You requested to reset your password. Click the link below to set a new password:
 
-    {reset_url}
+{reset_url}
 
-    This link will expire in 1 hour.
+This link will expire in 1 hour.
 
-    If you didn't request this, you can safely ignore this email.
+If you didn't request this, you can safely ignore this email.
 
-    Best regards,
-    The FastAPI Blog Team
-    """
+Best regards,
+The FastAPI Blog Team
+"""
 
     await send_email(
         to_email=to_email,
