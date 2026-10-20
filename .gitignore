@@ -12,3 +12,5 @@ wheels/
 # database
 *.sqlite3
 *.db
+
+.env
