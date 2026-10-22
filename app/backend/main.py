@@ -21,10 +21,11 @@ from core.exceptions import register_exception_handlers
 # main.py está en app/backend/, por eso subimos tres niveles
 # contando el propio archivo y llegamos a la raíz del proyecto.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = PROJECT_ROOT / "app" / "frontend"
 
-STATIC_DIR = PROJECT_ROOT / "static"
-MEDIA_DIR = PROJECT_ROOT / "media"
-TEMPLATES_DIR = PROJECT_ROOT / "templates"
+STATIC_DIR = FRONTEND_DIR / "static"
+MEDIA_DIR = PROJECT_ROOT / "app" / "backend" / "media"
+TEMPLATES_DIR = FRONTEND_DIR / "templates"
 
 
 @asynccontextmanager

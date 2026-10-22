@@ -32,4 +32,4 @@ COPY . .
 EXPOSE 80
 
 # 10. Iniciar FastAPI
-CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "80"]
+CMD ["fastapi", "run", "app/backend/main.py", "--host", "0.0.0.0", "--port", "80"]
